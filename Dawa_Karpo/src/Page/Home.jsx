@@ -7,22 +7,26 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation, Autoplay } from "swiper/modules";
 import { addToCart } from "../utils/cart";
+import HomeSlider from "./HomeSlider";
 
 const Home = () => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
-  const [messages, setMessages] = useState([]); // ✅ Contact messages state
+  const [messages, setMessages] = useState([]);
 
-  // ✅ Protect route
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [savedDetails, setSavedDetails] = useState({});
+
+  // Protect route
   useEffect(() => {
     const user = localStorage.getItem("user");
-    if (!user) {
-      navigate("/");
-    }
+    if (!user) navigate("/");
   }, [navigate]);
 
-  // ✅ Fetch Latest Products
+  // Fetch products
   useEffect(() => {
     axios
       .get("http://127.0.0.1:8000/api/latest-products/")
@@ -30,7 +34,7 @@ const Home = () => {
       .catch((err) => console.error(err));
   }, []);
 
-  // ✅ Fetch Contact Messages
+  // Fetch messages
   useEffect(() => {
     axios
       .get("http://127.0.0.1:8000/api/contacts/")
@@ -38,195 +42,316 @@ const Home = () => {
       .catch((err) => console.error(err));
   }, []);
 
+  // ✅ SAFE JSON PARSER (NEW - IMPORTANT)
+  const getParsedSizes = (product) => {
+    if (!product?.sizes) return [];
+
+    if (Array.isArray(product.sizes)) {
+      return product.sizes;
+    }
+
+    try {
+      return JSON.parse(product.sizes);
+    } catch {
+      return [];
+    }
+  };
+
+  // Dynamic size options
+  const getAllSizes = (product) => {
+    if (!product) return [];
+    if (product.category?.toLowerCase() === "shoes") {
+      return ["7", "8", "9", "10"];
+    } else {
+      return ["S", "M", "L", "XL", "XXL", "XXXL"];
+    }
+  };
+
+  const handleSaveDetails = () => {
+    if (!selectedSize) {
+      alert("Please select size");
+      return;
+    }
+
+    setSavedDetails({
+      ...savedDetails,
+      [selectedProduct.id]: {
+        size: selectedSize,
+        quantity: quantity,
+      },
+    });
+
+    setSelectedProduct(null);
+    setSelectedSize("");
+    setQuantity(1);
+  };
+
   return (
-    <div
-      style={{
-        width: "100%",
-        padding: "200px 30px",
-        boxSizing: "border-box",
-      }}
-    >
-      {/* ================= HEADER ================= */}
-      <div style={{ textAlign: "center", marginBottom: "25px" }}>
-        <h2
-          style={{
-            fontSize: "30px",
-            padding: "70px",
-            fontWeight: "800",
-            color: "#212529",
-          }}
-        >
-          🛍️ Featured Products
-        </h2>
+    <>
+      <HomeSlider />
 
-        <p
-          style={{
-            color: "#555",
-            fontSize: "40px",
-            fontWeight: "500",
-          }}
-        >
-          Discover our latest collections just for you
-        </p>
+      <div style={{ width: "100%", padding: "200px 30px" }}>
+        <div style={{ textAlign: "center", marginBottom: "25px" }}>
+          <h2 style={{ fontSize: "30px", fontWeight: "800" }}>
+            🛍️ Featured Products
+          </h2>
+          <p style={{ fontSize: "22px", fontWeight: "700" }}>
+            <Link to="/shop">--More option--</Link>
+          </p>
+        </div>
 
-        <p
-          style={{
-            fontSize: "22px",
-            fontWeight: "700",
-            marginTop: "10px",
-          }}
-        >
-          <Link to="/shop">--More option--</Link>
-        </p>
-      </div>
-
-      {/* ================= PRODUCT SLIDER ================= */}
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "20px auto",
-          padding: "20px",
-          backgroundColor: "#ffffff",
-          borderRadius: "16px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-        }}
-      >
-        <Swiper
-          modules={[Navigation, Autoplay]}
-          navigation
-          autoplay={{ delay: 3000 }}
-          spaceBetween={16}
-          slidesPerView={3}
-          breakpoints={{
-            0: { slidesPerView: 1 },
-            768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-          }}
-        >
-          {products.map((product) => (
-            <SwiperSlide key={product.id}>
-              <div
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                  boxShadow: "0 6px 18px rgba(0,0,0,0.1)",
-                }}
-              >
-                <img
-                  src={`http://127.0.0.1:8000${product.image}`}
-                  alt={product.name}
-                  style={{
-                    width: "100%",
-                    height: "200px",
-                    objectFit: "cover",
-                  }}
-                />
-
+        <div style={{ maxWidth: "1200px", margin: "auto" }}>
+          <Swiper
+            modules={[Navigation, Autoplay]}
+            navigation
+            autoplay={{ delay: 3000 }}
+            spaceBetween={16}
+            slidesPerView={3}
+            breakpoints={{
+              0: { slidesPerView: 1 },
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+            }}
+          >
+            {products.map((product) => (
+              <SwiperSlide key={product.id}>
                 <div
                   style={{
-                    padding: "14px",
-                    textAlign: "center",
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: "160px",
+                    background: "#fff",
+                    borderRadius: "14px",
+                    padding: "15px",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <h5
+                  <img
+                    src={`http://127.0.0.1:8000${product.image}`}
+                    alt={product.name}
                     style={{
-                      fontSize: "16px",
-                      fontWeight: "700",
-                      marginBottom: "6px",
-                      color: "black",
-                    }}
-                  >
-                    {product.name}
-                  </h5>
-
-                  <p
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "700",
-                      color: "#0d6efd",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    ₹ {product.price}
-                  </p>
-
-                  <button
-                    onClick={() => addToCart(product)}
-                    style={{
-                      marginTop: "auto",
                       width: "100%",
-                      padding: "10px",
+                      height: "200px",
+                      objectFit: "cover",
+                      borderRadius: "10px",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      textAlign: "center",
+                      marginTop: "10px",
+                      display: "flex",
+                      flexDirection: "column",
+                      minHeight: "160px",
+                    }}
+                  >
+                    <h5
+                      onClick={() => setSelectedProduct(product)}
+                      style={{
+                        cursor: "pointer",
+                        fontWeight: "700",
+                        color: "#000",
+                      }}
+                    >
+                      {product.name}
+                    </h5>
+
+                    <p style={{ color: "#0d6efd", fontWeight: "700" }}>
+                      ₹ {product.price}
+                    </p>
+
+                    {savedDetails[product.id] && (
+                      <div style={{ marginBottom: "8px", color: "#555" }}>
+                        <p>Size: {savedDetails[product.id].size}</p>
+                        <p>Qty: {savedDetails[product.id].quantity}</p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        if (!savedDetails[product.id]) {
+                          alert("Please select details first");
+                          return;
+                        }
+
+                        const productData = {
+                          ...product,
+                          ...savedDetails[product.id],
+                        };
+
+                        addToCart(productData);
+                        navigate("/cart");
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        border: "none",
+                        borderRadius: "8px",
+                        backgroundColor: "#0d6efd",
+                        color: "#fff",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        marginTop: "auto",
+                      }}
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+
+        {/* POPUP */}
+        {selectedProduct && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(0,0,0,0.7)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 999,
+            }}
+          >
+            <div
+              style={{
+                background: "linear-gradient(to right, #ffffff, #e6ecff)",
+                width: "700px",
+                borderRadius: "18px",
+                padding: "30px",
+                boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+              }}
+            >
+              <div style={{ display: "flex", gap: "25px" }}>
+                <div style={{ flex: 1 }}>
+                  <h2 style={{ fontWeight: "800" }}>
+                    {selectedProduct.name}
+                  </h2>
+
+                  <h3 style={{ color: "#0d6efd", fontWeight: "700" }}>
+                    ₹ {selectedProduct.price}
+                  </h3>
+
+                  <div
+                    style={{
+                      marginTop: "15px",
+                      fontSize: "14px",
+                      color: "#555",
+                      lineHeight: "1.6",
+                    }}
+                  >
+                    {selectedProduct.description}
+                  </div>
+                </div>
+
+                <div>
+                  <img
+                    src={`http://127.0.0.1:8000${selectedProduct.image}`}
+                    alt={selectedProduct.name}
+                    style={{
+                      width: "220px",
+                      height: "220px",
+                      objectFit: "cover",
+                      borderRadius: "12px",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* SIZE */}
+              <div style={{ marginTop: "25px" }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ fontWeight: "600" }}>Select Size:</label>
+
+                  <select
+                    value={selectedSize}
+                    onChange={(e) => setSelectedSize(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      marginTop: "5px",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <option value="">Choose Size</option>
+
+                    {getAllSizes(selectedProduct).map((size) => {
+                      const availableSizes =
+                        getParsedSizes(selectedProduct);
+
+                      const isAvailable =
+                        availableSizes.includes(size);
+
+                      return (
+                        <option
+                          key={size}
+                          value={size}
+                          disabled={!isAvailable}
+                        >
+                          {size} {!isAvailable ? "(Out of Stock)" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ fontWeight: "600" }}>Quantity:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      marginTop: "5px",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                  <button
+                    onClick={handleSaveDetails}
+                    style={{
+                      padding: "10px 20px",
+                      background: "#0d6efd",
+                      color: "#fff",
                       border: "none",
                       borderRadius: "8px",
-                      backgroundColor: "#0d6efd",
-                      color: "#fff",
-                      fontWeight: "600",
+                      marginRight: "10px",
                       cursor: "pointer",
                     }}
                   >
-                    Add to Cart
+                    Save Details
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedProduct(null)}
+                    style={{
+                      padding: "10px 20px",
+                      background: "gray",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Close
                   </button>
                 </div>
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-
-      {/* ================= CONTACT MESSAGES SECTION ================= */}
-      <div
-        style={{
-          maxWidth: "1000px",
-          margin: "60px auto",
-          padding: "20px",
-        }}
-      >
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "30px",
-            fontWeight: "800",
-          }}
-        >
-          💬 Customer Messages
-        </h2>
-
-        {messages.length === 0 ? (
-          <p style={{ textAlign: "center", fontSize: "40px"}}>No messages yet</p>
-        ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                background: "#ffffff",
-                padding: "20px",
-                marginBottom: "20px",
-                borderRadius: "12px",
-                boxShadow: "0 6px 15px rgba(0,0,0,0.08)",
-              }}
-            >
-              <h4 style={{ marginBottom: "5px" }}>{msg.name}</h4>
-
-              <p
-                style={{
-                  color: "#0d6efd",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                {msg.email}
-              </p>
-
-              <p style={{ color: "#555" }}>{msg.message}</p>
             </div>
-          ))
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

@@ -7,22 +7,56 @@ const AddProduct = () => {
     category: "",
     description: "",
     image: null,
+    sizes: [],
   });
 
+  // Handle normal inputs
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
+
+    if (name === "category") {
+      setFormData({
+        ...formData,
+        category: value,
+        sizes: [], // reset sizes when category changes
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: files ? files[0] : value,
+      });
+    }
   };
 
+  // Handle size checkbox
+  const handleSizeChange = (e) => {
+    const { value, checked } = e.target;
+
+    if (checked) {
+      setFormData((prev) => ({
+        ...prev,
+        sizes: [...prev.sizes, value],
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        sizes: prev.sizes.filter((size) => size !== value),
+      }));
+    }
+  };
+
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const data = new FormData();
+
     Object.keys(formData).forEach((key) => {
-      data.append(key, formData[key]);
+      if (key === "sizes") {
+        data.append("sizes", JSON.stringify(formData.sizes));
+      } else {
+        data.append(key, formData[key]);
+      }
     });
 
     try {
@@ -43,6 +77,12 @@ const AddProduct = () => {
     }
   };
 
+  const shoeSizes = ["7","8", "9", "10"];
+  const clothSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
+
+  const selectedSizes =
+    formData.category === "shoes" ? shoeSizes : clothSizes;
+
   return (
     <div
       style={{
@@ -62,18 +102,30 @@ const AddProduct = () => {
           borderRadius: "12px",
         }}
       >
-        <h2 style={{ textAlign: "center", color: "#fff", marginBottom: "25px" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            color: "#fff",
+            marginBottom: "25px",
+          }}
+        >
           Add Product
         </h2>
 
         <form
           onSubmit={handleSubmit}
-          style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px",
+          }}
         >
           <input
             name="name"
             placeholder="Product Name"
+            value={formData.name}
             onChange={handleChange}
+            required
             style={inputStyle}
           />
 
@@ -81,16 +133,18 @@ const AddProduct = () => {
             name="price"
             type="number"
             placeholder="Price"
+            value={formData.price}
             onChange={handleChange}
+            required
             style={inputStyle}
           />
 
-          {/* 🔹 CATEGORY DROPDOWN */}
           <select
             name="category"
+            value={formData.category}
             onChange={handleChange}
-            style={inputStyle}
             required
+            style={inputStyle}
           >
             <option value="">Select Category</option>
             <option value="shoes">Shoes</option>
@@ -100,11 +154,68 @@ const AddProduct = () => {
             <option value="t-shirt">T-Shirt</option>
           </select>
 
+          {/* SIZE SECTION */}
+          {formData.category !== "" && (
+            <div
+              style={{
+                background: "#ffffff",
+                padding: "15px",
+                borderRadius: "8px",
+              }}
+            >
+              <label
+                style={{
+                  display: "block",
+                  fontWeight: "bold",
+                  marginBottom: "10px",
+                  color: "#1d8681",
+                }}
+              >
+                {formData.category === "shoes"
+                  ? "Select Shoe Sizes"
+                  : "Select Clothing Sizes"}
+              </label>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                {selectedSizes.map((size) => (
+                  <label
+                    key={size}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      background: "#0a0a0a",
+                      padding: "6px 10px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      value={size}
+                      checked={formData.sizes.includes(size)}
+                      onChange={handleSizeChange}
+                    />
+                    {size}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <textarea
             name="description"
             placeholder="Product Description"
             rows={4}
+            value={formData.description}
             onChange={handleChange}
+            required
             style={inputStyle}
           />
 
@@ -112,6 +223,7 @@ const AddProduct = () => {
             type="file"
             name="image"
             onChange={handleChange}
+            required
             style={{
               padding: "10px",
               borderRadius: "8px",

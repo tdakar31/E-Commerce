@@ -202,3 +202,45 @@ from .serializers import ContactSerializer
 class ContactListCreateView(generics.ListCreateAPIView):
     queryset = Contact.objects.all().order_by('-created_at')
     serializer_class = ContactSerializer
+
+
+
+from .models import Cart
+
+
+@api_view(["POST"])
+def add_to_cart(request):
+    user = User.objects.get(id=request.data["user"])
+    product = Product.objects.get(id=request.data["product"])
+    size = request.data.get("size")
+    quantity = request.data.get("quantity", 1)
+
+    cart_item = Cart.objects.create(
+        user=user,
+        product=product,
+        size=size,
+        quantity=quantity,
+    )
+
+    return Response({"message": "Item added to cart"})
+
+
+@api_view(['GET'])
+def get_cart(request):
+    user = request.user
+    cart_items = Cart.objects.filter(user=user)
+
+    data = []
+    for item in cart_items:
+        data.append({
+            "id": item.id,
+            "product_name": item.product.name,
+            "price": item.product.price,
+            "image": item.product.image.url,
+            "size": item.size,
+            "color": item.color,
+            "quantity": item.quantity,
+            "total": item.quantity * item.product.price
+        })
+
+    return Response(data)

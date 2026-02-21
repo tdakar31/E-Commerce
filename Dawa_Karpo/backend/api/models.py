@@ -12,6 +12,18 @@ class Product(models.Model):
         ("jacket", "Jacket"),
         ("t-shirt", "T-Shirt"),
     ]
+    SIZE_CHOICES = [
+        ("8", "8"),
+        ("9", "9"),
+        ("10", "10"),
+        ("S", "S"),
+        ("M", "M"),
+        ("L", "L"),
+        ("XL", "XL"),
+        ("XXL", "XXL"),
+        ("XXXL", "XXXL"),
+    ]
+
 
     name = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -21,11 +33,23 @@ class Product(models.Model):
     )
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="products/")
+    sizes = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
+    
 
     def __str__(self):
         return self.name
+    
 
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="cart_items")
+    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    size = models.CharField(max_length=20, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name}"
 
 
 
@@ -34,7 +58,7 @@ class Profile(models.Model):
     full_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=10)
     address = models.TextField(blank=True, null=True)
-    dob = models.DateField()
+    dob = models.DateField(null=True, blank=True)
     profile_photo = models.ImageField(upload_to="profiles/", null=True, blank=True)
 
     def __str__(self):
@@ -49,10 +73,14 @@ def create_profile(sender, instance, created, **kwargs):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product_name = models.CharField(max_length=200)
-    status = models.CharField(max_length=100)
-    total_price = models.FloatField()
+    # product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+
+    quantity = models.IntegerField()
+    size = models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
+    delivery_date = models.DateField(null=True, blank=True)
+
 
 
 class Contact(models.Model):

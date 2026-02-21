@@ -12,7 +12,7 @@ import AddProduct from "./Page/AddProduct";
 import Register from "./Page/Register";
 import ForgotPassword from "./Page/ForgotPassword";
 import Cart from "./Page/Cart";
-import Dashboard from "./Page/Dashboard";
+// import Dashboard from "./Page/Dashboard";
 import Shop from "./Page/Shop";
 
 
@@ -42,7 +42,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/dashboard" element={<Dashboard/>}/>
+          {/* <Route path="/dashboard" element={<Dashboard/>}/> */}
           <Route path="/shop" element={<Shop/>}/>
         </Routes>
       </main>

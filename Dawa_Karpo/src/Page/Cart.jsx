@@ -39,97 +39,136 @@ const Cart = () => {
   return (
     <div style={styles.page}>
       <h1 style={styles.heading}>🛍️ Your Cart</h1>
-
-      {cart.map((item) => (
-  <div 
-    key={item.id} 
-    style={{
-      display: "flex",
-      gap: "20px",
-      padding: "20px",      // Added padding
-      marginBottom: "25px", // Added margin
-      borderRadius: "16px",
-      background: "#ffffff",
-      boxSizing: "border-box",
-      boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-      alignItems: "center"
-    }}
-  >
-    <img
-      src={
-        item.image?.startsWith("http")
-          ? item.image
-          : `http://127.0.0.1:8000${item.image || "/media/default.jpg"}`
-      }
-      alt="product"
-      style={{
-        width: "120px",
-        height: "120px",
-        objectFit: "cover",
-        borderRadius: "12px",
-      }}
-    />
-
-    <div style={{ flex: 1, paddingLeft: "10px" }}>
-      {/* 🏷️ PRODUCT NAME - Forced Visibility */}
-      <h3 
-        style={{ 
-          fontSize: "22px", 
-          fontWeight: "800", 
-          margin: "0 0 10px 0", // Margin bottom for spacing
-          padding: "0",
-          color: "#1a1a1a",      // Explicit dark color
-          display: "block" 
+      <h3
+        style={{
+          textAlign: "center",
+          marginTop: "20px",
+          fontSize: "60px",
+          fontWeight: "bold",
+          background: "linear-gradient(90deg, red, blue)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          animation: "blink 1s infinite"
         }}
       >
-        {item.name || item.title || "Product Name Missing"}
+        Refresh the page to update the card!!
       </h3>
 
-      <p 
-        style={{ 
-          fontSize: "18px", 
-          fontWeight: "700", 
-          color: "#2563eb", 
-          margin: "5px 0 15px 0" 
-        }}
-      >
-        ₹ {item.price || 0}
-      </p>
-
-      <div style={{ display: "flex", gap: "10px" }}>
-        <button
-          onClick={() => handleRemove(item.id)}
+      <style>
+        {`
+          @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+        `}
+      </style>
+      {cart.map((item) => (
+        <div
+          key={item.id}
           style={{
-            padding: "10px 16px",
-            border: "none",
-            borderRadius: "8px",
-            backgroundColor: "#dc2626",
-            color: "#fff",
-            fontWeight: "600",
-            cursor: "pointer",
+            display: "flex",
+            gap: "20px",
+            padding: "20px",      // Added padding
+            marginBottom: "25px", // Added margin
+            borderRadius: "16px",
+            background: "#ffffff",
+            boxSizing: "border-box",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+            alignItems: "center"
           }}
         >
-          ❌ Remove
-        </button>
+          <img
+            src={
+              item.image?.startsWith("http")
+                ? item.image
+                : `http://127.0.0.1:8000${item.image || "/media/default.jpg"}`
+            }
+            alt="product"
+            style={{
+              width: "120px",
+              height: "120px",
+              objectFit: "cover",
+              borderRadius: "12px",
+            }}
+          />
 
-        <Link 
-          to="/shop" 
-          style={{
-            padding: "10px 16px",
-            borderRadius: "8px",
-            backgroundColor: "#f3f4f6",
-            color: "#1f2937",
-            fontWeight: "600",
-            textDecoration: "none",
-            border: "1px solid #d1d5db"
-          }}
-        >
-          ➕ Add More
-        </Link>
-      </div>
-    </div>
-  </div>
-))}
+          <div style={{ flex: 1, paddingLeft: "10px" }}>
+            {/* 🏷️ PRODUCT NAME - Forced Visibility */}
+            <h3
+              style={{
+                fontSize: "22px",
+                fontWeight: "800",
+                margin: "0 0 10px 0", // Margin bottom for spacing
+                padding: "0",
+                color: "#1a1a1a",      // Explicit dark color
+                display: "block"
+              }}
+            >
+              {item.name || item.title || "Product Name Missing"}
+            </h3>
+            <p style={{
+              fontSize: "18px",
+              fontWeight: "700",
+              color: "#2563eb",
+              margin: "5px 0 10px 0"
+            }}>
+              ₹ {item.price || 0}
+            </p>
+
+            {/* ✅ Size & Quantity Box */}
+            <div style={{
+              background: "#ffffff",
+              color: "#000000",
+              padding: "12px 16px",
+              borderRadius: "12px",
+              marginBottom: "15px",
+              width: "fit-content"
+            }}>
+              <div style={{ marginBottom: "6px", fontWeight: "600" }}>
+                📏 Size: {item.size || "Not Selected"}
+              </div>
+
+              <div style={{ fontWeight: "600" }}>
+                🔢 Qty: {item.quantity || 1}
+              </div>
+            </div>
+
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => handleRemove(item.id)}
+                style={{
+                  padding: "10px 16px",
+                  border: "none",
+                  borderRadius: "8px",
+                  backgroundColor: "#dc2626",
+                  color: "#fff",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                ❌ Remove
+              </button>
+
+              <Link
+                to="/shop"
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#1f2937",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  border: "1px solid #d1d5db"
+                }}
+              >
+                ➕ Add More
+              </Link>
+            </div>
+          </div>
+        </div>
+      ))}
 
       <div style={styles.totalBox}>
         <h2>Total: ₹ {total}</h2>

@@ -1,4 +1,5 @@
 // src/utils/cart.js
+import axios from "axios";
 
 export const getCart = () => {
   return JSON.parse(localStorage.getItem("cart")) || [];

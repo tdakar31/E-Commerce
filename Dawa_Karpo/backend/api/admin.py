@@ -1,7 +1,7 @@
-# Tenzing_Dakar ps 51019989679989179
+# Tenzin_Dakar ps 51019989679989179
 # Register your models here.
 from django.contrib import admin
-from .models import Product
+from .models import Product, Cart
 from .models import Contact
 from .models import Profile
 
@@ -20,3 +20,4 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Contact)
+admin.site.register(Cart)
