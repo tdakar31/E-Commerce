@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HomeSlider from "./HomeSlider";
+import { addToCart } from "../utils/cart";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -38,7 +39,7 @@ const Shop = () => {
     setSelectedProduct(null);
   };
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => {
     const finalSize = selectedSize || product.selectedSize;
     const finalQty = quantity || product.quantity || 1;
 
@@ -47,19 +48,25 @@ const Shop = () => {
       return;
     }
 
-    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+    // const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
 
-    const productToAdd = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      size: finalSize,
-      quantity: Number(finalQty),
-    };
+    // const productToAdd = {
+    //   id: product.id,
+    //   name: product.name,
+    //   price: product.price,
+    //   image: product.image,
+    //   size: finalSize,
+    //   quantity: Number(finalQty),
+    // };
 
-    cartItems.push(productToAdd);
-    localStorage.setItem("cart", JSON.stringify(cartItems));
+    // cartItems.push(productToAdd);
+    // localStorage.setItem("cart", JSON.stringify(cartItems));
+
+    await addToCart({
+    id: product.id,
+    size: finalSize,
+    quantity: Number(finalQty),
+  });
 
     navigate("/cart");
   };

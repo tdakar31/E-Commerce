@@ -4,24 +4,48 @@ import { Link } from "react-router-dom";
 
 const Cart = () => {
   const [cart, setCart] = useState([]);
+  const loadCart = async () => {
+    const data = await getCart();
 
+    // if (Array.isArray(data)) {
+    //   setCart(data);
+    // } else {
+    //   setCart([]);
+    // }
+    setCart(Array.isArray(data) ? data : []);
+  };
   // Load cart on mount
+  // useEffect(() => {
+  //   const cartItems = getCart();
+  //   setCart(cartItems);
+  // }, []);
   useEffect(() => {
-    const cartItems = getCart();
-    setCart(cartItems);
+    loadCart();
   }, []);
 
   // Remove item from cart
-  const handleRemove = (id) => {
-    removeFromCart(id);
-    setCart(getCart());
+  // const handleRemove = (id) => {
+  //   removeFromCart(id);
+  //   setCart(getCart());
+  // };
+  const handleRemove = async (id) => {
+    await removeFromCart(id);
+    loadCart();
   };
 
   // Calculate total
+  console.log("Cart data:", cart);
+  // const total = cart.reduce(
+  //   (sum, item) => sum + Number(item.price || 0),
+  //   0
+  // );
   const total = cart.reduce(
-    (sum, item) => sum + Number(item.price || 0),
-    0
-  );
+  (acc, item) =>
+    acc +
+    Number(item.product?.price || 0) *
+    Number(item.quantity || 1),
+  0
+);
 
   // 🟡 Empty Cart View
   if (!cart.length) {
@@ -35,6 +59,87 @@ const Cart = () => {
       </div>
     );
   }
+
+  const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
+const handlePayment = async () => {
+  try {
+    const res = await loadRazorpayScript();
+
+    if (!res) {
+      alert("Razorpay SDK failed to load.");
+      return;
+    }
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/create-order/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: total * 100,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      alert("Failed to create order");
+      return;
+    }
+
+    const orderData = await response.json();
+
+    const options = {
+      key: "rzp_test_S8RPc5SoZKxdSi",
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: "Dawa Karpo",
+      description: "Thank you for shopping",
+      order_id: orderData.id,
+
+      handler: function (response) {
+        alert("Payment Successful!");
+        console.log(response);
+      },
+
+      modal: {
+        ondismiss: function () {
+          console.log("Payment popup closed");
+        },
+      },
+
+      prefill: {
+        name: "Tenzin Dakar",
+        email: "test@email.com",
+        contact: "9999999999",
+      },
+
+      theme: {
+        color: "#2563eb",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
+
+  } catch (error) {
+    console.error("Payment Error:", error);
+    alert("Something went wrong!");
+  }
+};
 
   return (
     <div style={styles.page}>
@@ -80,9 +185,12 @@ const Cart = () => {
         >
           <img
             src={
-              item.image?.startsWith("http")
-                ? item.image
-                : `http://127.0.0.1:8000${item.image || "/media/default.jpg"}`
+              // item.image?.startsWith("http")
+              //   ? item.image
+              //   : `http://127.0.0.1:8000${item.image || "/media/default.jpg"}`
+              item.product?.image
+                ? `http://127.0.0.1:8000${item.product.image}`
+                : "/profile.jpg"
             }
             alt="product"
             style={{
@@ -105,7 +213,7 @@ const Cart = () => {
                 display: "block"
               }}
             >
-              {item.name || item.title || "Product Name Missing"}
+              {item.product?.name || item.title || "Product Name Missing"}
             </h3>
             <p style={{
               fontSize: "18px",
@@ -113,7 +221,7 @@ const Cart = () => {
               color: "#2563eb",
               margin: "5px 0 10px 0"
             }}>
-              ₹ {item.price || 0}
+              ₹ {item.product?.price || 0}
             </p>
 
             {/* ✅ Size & Quantity Box */}
@@ -172,7 +280,7 @@ const Cart = () => {
 
       <div style={styles.totalBox}>
         <h2>Total: ₹ {total}</h2>
-        <button style={styles.payBtn}>Proceed to Payment</button>
+        <button style={styles.payBtn} onClick={handlePayment}>Proceed to Payment</button>
       </div>
     </div>
   );

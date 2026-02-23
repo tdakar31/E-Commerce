@@ -166,7 +166,7 @@ const Home = () => {
                     )}
 
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (!savedDetails[product.id]) {
                           alert("Please select details first");
                           return;
@@ -177,7 +177,14 @@ const Home = () => {
                           ...savedDetails[product.id],
                         };
 
-                        addToCart(productData);
+                        // addToCart(productData);
+                        // navigate("/cart");
+                        await addToCart({
+                          id: product.id,
+                          size: savedDetails[product.id].size,
+                          quantity: savedDetails[product.id].quantity,
+                        });
+
                         navigate("/cart");
                       }}
                       style={{

@@ -1,27 +1,58 @@
-// src/utils/cart.js
+// import axios from "axios";
+
+// const API_BASE = "http://127.0.0.1:8000";
+
+// export const addToCart = async (product) => {
+//   try {
+//     await axios.post(`${API_BASE}/add-to-cart/`, {
+//       product: product.id,
+//       size: product.size,
+//       quantity: product.quantity,
+//     });
+
+//     window.dispatchEvent(new Event("cartUpdated"));
+//   } catch (error) {
+//     console.error("Add to cart error:", error.response?.data || error);
+//     alert("Failed to add product to cart");
+//   }
+// };
+
 import axios from "axios";
 
-export const getCart = () => {
-  return JSON.parse(localStorage.getItem("cart")) || [];
+const API_BASE = "http://127.0.0.1:8000/api";
+
+// ✅ Add item
+export const addToCart = async (product) => {
+  try {
+    await axios.post(`${API_BASE}/add-to-cart/`, {
+      product: product.id,
+      size: product.size,
+      quantity: product.quantity,
+    });
+
+    window.dispatchEvent(new Event("cartUpdated"));
+  } catch (error) {
+    console.error("Add to cart error:", error.response?.data || error);
+  }
 };
 
-export const addToCart = (product) => {
-  const cart = getCart();
-
-  // prevent duplicate products
-  const exists = cart.find((item) => item.id === product.id);
-  if (exists) return;
-
-  cart.push(product);
-  localStorage.setItem("cart", JSON.stringify(cart));
-
-  // notify navbar & cart
-  window.dispatchEvent(new Event("cartUpdated"));
+// ✅ Get cart
+export const getCart = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/cart/`);
+    return response.data;
+  } catch (error) {
+    console.error("Get cart error:", error.response?.data || error);
+    return [];
+  }
 };
 
-export const removeFromCart = (id) => {
-  const cart = getCart().filter((item) => item.id !== id);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  window.dispatchEvent(new Event("cartUpdated"));
+// ✅ Remove item
+export const removeFromCart = async (id) => {
+  try {
+    await axios.delete(`${API_BASE}/cart/${id}/`);
+    // window.dispatchEvent(new Event("cartUpdated"));
+  } catch (error) {
+    console.error("Remove error:", error);
+  }
 };
-

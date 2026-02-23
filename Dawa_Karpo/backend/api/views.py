@@ -152,27 +152,8 @@ class UserProfileView(APIView):
         return Response(serializer.data)
 
 
-from .models import Order
-from .serializers import OrderSerializer
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def my_orders(request):
-    orders = Order.objects.filter(user=request.user)
-    serializer = OrderSerializer(orders, many=True)
-    return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def track_order(request, order_id):
-    order = Order.objects.get(id=order_id, user=request.user)
-
-    return Response({
-        "product_name": order.product_name,
-        "status": order.status,
-        "total_price": order.total_price,
-        "created_at": order.created_at,
-    })
 
 
 from django.db.models import Q
@@ -208,39 +189,123 @@ class ContactListCreateView(generics.ListCreateAPIView):
 from .models import Cart
 
 
+# @api_view(["POST"])
+# def add_to_cart(request):
+#     try:
+#         user = User.objects.get(id=1)  # 🔥 TEMP: use existing user id
+#         product = Product.objects.get(id=request.data["product"])
+
+#         size = request.data.get("size")
+#         quantity = request.data.get("quantity", 1)
+
+#         Cart.objects.create(
+#             user=user,
+#             product=product,
+#             size=size,
+#             quantity=quantity,
+#         )
+
+#         return Response({"message": "Item added to cart"}, status=201)
+
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=400)
+
 @api_view(["POST"])
 def add_to_cart(request):
-    user = User.objects.get(id=request.data["user"])
-    product = Product.objects.get(id=request.data["product"])
-    size = request.data.get("size")
-    quantity = request.data.get("quantity", 1)
+    try:
+        user = User.objects.get(id=1)  # Temporary user
+        product = Product.objects.get(id=request.data["product"])
 
-    cart_item = Cart.objects.create(
-        user=user,
-        product=product,
-        size=size,
-        quantity=quantity,
-    )
+        size = request.data.get("size")
+        quantity = int(request.data.get("quantity", 1))
 
-    return Response({"message": "Item added to cart"})
+        cart_item, created = Cart.objects.get_or_create(
+            user=user,
+            product=product,
+            size=size,
+            defaults={"quantity": quantity},
+        )
 
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save()
+
+        serializer = CartSerializer(cart_item)
+        return Response(serializer.data, status=201)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
+    
+
+# @api_view(['GET'])
+# def get_cart(request):
+#     user = request.user
+#     cart_items = Cart.objects.filter(user=user)
+
+#     data = []
+#     for item in cart_items:
+#         data.append({
+#             "id": item.id,
+#             "product_name": item.product.name,
+#             "price": item.product.price,
+#             "image": item.product.image.url,
+#             "size": item.size,
+#             "color": item.color,
+#             "quantity": item.quantity,
+#             "total": item.quantity * item.product.price
+#         })
+
+#     return Response(data)
+from .serializers import CartSerializer
 
 @api_view(['GET'])
 def get_cart(request):
-    user = request.user
-    cart_items = Cart.objects.filter(user=user)
+    user = User.objects.get(id=1)
 
-    data = []
-    for item in cart_items:
-        data.append({
-            "id": item.id,
-            "product_name": item.product.name,
-            "price": item.product.price,
-            "image": item.product.image.url,
-            "size": item.size,
-            "color": item.color,
-            "quantity": item.quantity,
-            "total": item.quantity * item.product.price
+    cart_items = Cart.objects.filter(user=user)
+    serializer = CartSerializer(cart_items, many=True)
+    return Response(serializer.data)
+
+@api_view(["DELETE"])
+def delete_cart_item(request, pk):
+    try:
+        user = User.objects.get(id=1)  # same temp user
+
+        cart_item = Cart.objects.get(id=pk, user=user)
+        cart_item.delete()
+
+        return Response({"message": "Item deleted"}, status=200)
+
+    except Cart.DoesNotExist:
+        return Response({"error": "Item not found"}, status=404)
+    
+
+import razorpay
+from django.conf import settings
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+client = razorpay.Client(
+    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+)
+
+@api_view(['POST'])
+def create_order(request):
+    try:
+        amount = request.data.get('amount')
+
+        if not amount:
+            return Response({"error": "Amount not provided"}, status=400)
+
+        payment = client.order.create({
+            "amount": int(amount),
+            "currency": "INR",
+            "payment_capture": 1
         })
 
-    return Response(data)
+        return Response(payment)
+
+    except Exception as e:
+        print("RAZORPAY ERROR:", str(e))
+        return Response({"error": str(e)}, status=500)

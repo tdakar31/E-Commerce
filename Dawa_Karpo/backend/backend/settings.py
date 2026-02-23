@@ -128,3 +128,6 @@ MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 CORS_ALLOW_ALL_ORIGINS = True
+
+RAZORPAY_KEY_ID = 'rzp_test_S8RPc5SoZKxdSi'
+RAZORPAY_KEY_SECRET = 'o52jFDCfhvFmAjs4HKYCItz5'
